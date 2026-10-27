@@ -1,0 +1,10 @@
+{
+  "name": "finance-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "目標理財規劃器：用 PV / FV / PMT 試算理財目標（純靜態網站）",
+  "scripts": {
+    "dev": "npx wrangler pages dev public",
+    "deploy": "npx wrangler pages deploy public --project-name=finance-planner"
+  }
+}

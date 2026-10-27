@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>目標理財規劃器</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f7f4;--card:#fff;--tx:#1d2b24;--mu:#66756d;--ac:#0f7a5a;--ac2:#e0f2eb;--bd:#dde3de;--warn:#b45309;--wbg:#fef3e2;--bad:#b42318;--bbg:#fdeceb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121815;--card:#1b2420;--tx:#e8efea;--mu:#9aaba1;--ac:#3fcf9f;--ac2:#1f3a30;--bd:#2c3a33;--warn:#f5b54a;--wbg:#3a2e17;--bad:#ff8a80;--bbg:#3b1f1d}}
+:root[data-theme="dark"]{--bg:#121815;--card:#1b2420;--tx:#e8efea;--mu:#9aaba1;--ac:#3fcf9f;--ac2:#1f3a30;--bd:#2c3a33;--warn:#f5b54a;--wbg:#3a2e17;--bad:#ff8a80;--bbg:#3b1f1d}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--mu);margin:0 0 18px;font-size:.92rem}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px}
+.tab{flex:1 0 auto;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:10px 14px;border-radius:10px;cursor:pointer;font:inherit;font-size:.92rem;text-align:left}
+.tab b{display:block;font-size:.95rem}.tab span{color:var(--mu);font-size:.78rem}
+.tab.on{background:var(--ac);border-color:var(--ac);color:#fff}.tab.on span{color:#e6fff6}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h2{font-size:1rem;margin:0 0 12px}
+label{display:block;font-size:.85rem;color:var(--mu);margin-top:10px}
+.in{display:flex;align-items:center;border:1px solid var(--bd);border-radius:8px;background:var(--bg);overflow:hidden}
+.in input{flex:1;min-width:0;border:0;background:transparent;color:var(--tx);padding:9px 10px;font:inherit;outline:none}
+.in i{font-style:normal;color:var(--mu);padding:0 10px;font-size:.85rem}
+.in:focus-within{border-color:var(--ac)}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:.88rem;color:var(--mu)}
+.big{font-size:2rem;font-weight:700;color:var(--ac);line-height:1.2}
+.big small{display:block;font-size:.85rem;font-weight:400;color:var(--mu)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px}
+.kpi{background:var(--ac2);border-radius:10px;padding:10px 12px}.kpi div{font-size:.78rem;color:var(--mu)}.kpi b{font-size:1.05rem}
+.adv{margin:8px 0 0;padding:10px 12px;border-radius:10px;font-size:.9rem;background:var(--ac2)}
+.adv.w{background:var(--wbg);color:var(--warn)}.adv.b{background:var(--bbg);color:var(--bad)}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+td.cur{background:var(--ac2);font-weight:700}
+.fm{font-size:.8rem;color:var(--mu);line-height:1.7}
+code{background:var(--ac2);padding:1px 5px;border-radius:4px}
+svg{width:100%;height:auto;display:block}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--mu);margin-top:6px}
+.lg span:before{content:"";display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:middle;background:var(--c)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>目標理財規劃器</h1>
+<p class="sub">用 PV（現值）、FV（終值）、PMT（定期投入）和期數，回推你的理財目標需要怎麼做。</p>
+<div class="tabs" id="tabs"></div>
+<div class="grid">
+<div>
+<div class="card"><h2>參數設定</h2><div id="form"></div>
+<div class="chk"><input type="checkbox" id="begin"><label for="begin" style="margin:0">期初投入（每月月初存入，預設月底）</label></div>
+</div>
+</div>
+<div>
+<div class="card" id="res"></div>
+<div class="card"><h2>資產成長軌跡</h2><div id="chart"></div>
+<div class="lg"><span style="--c:var(--ac)">資產總值</span><span style="--c:#8a9a91">累計投入本金</span><span style="--c:#d9822b" id="tl">目標金額</span></div></div>
+<div class="card sc" id="sens"></div>
+<div class="card"><h2>公式說明</h2><div class="fm">
+月利率 <code>r = 年報酬率 ÷ 12</code>，期數 <code>n = 年數 × 12</code><br>
+<code>FV = PV·(1+r)ⁿ + PMT·[(1+r)ⁿ − 1] ÷ r</code><br>
+<code>PMT = (FV − PV·(1+r)ⁿ)·r ÷ [(1+r)ⁿ − 1]</code><br>
+<code>PV = PMT·[1 − (1+r)⁻ⁿ] ÷ r + FV·(1+r)⁻ⁿ</code><br>
+通膨調整：目標以「今日購買力」輸入，系統換算成未來名目金額 <code>目標×(1+通膨)^年數</code>。<br>
+本工具為試算參考，報酬率為假設值，不代表實際投資結果，亦非投資建議。</div></div>
+</div>
+</div>
+</div>
+<script>
+var MODES={
+pmt:{n:"每月該存多少",s:"PMT：給目標求投入",f:["target","pv","years","rate","inf","income"]},
+fv:{n:"未來會有多少",s:"FV：給投入求終值",f:["pmt","pv","years","rate","inf"]},
+n:{n:"多久能達標",s:"N：給目標求年數",f:["target","pv","pmt","rate","inf"]},
+pv:{n:"需要多少本金",s:"PV：退休提領試算",f:["wd","years","rate","fv"]}};
+var F={
+target:{l:"目標金額（今日幣值）",d:10000000,u:"NT$"},
+pv:{l:"目前已有本金 PV",d:200000,u:"NT$"},
+pmt:{l:"每月投入 PMT",d:15000,u:"NT$"},
+years:{l:"投資年數",d:20,u:"年"},
+rate:{l:"預期年報酬率",d:5,u:"%"},
+inf:{l:"年通膨率",d:2,u:"%"},
+income:{l:"每月稅後收入（選填）",d:60000,u:"NT$"},
+wd:{l:"退休後每月提領",d:50000,u:"NT$"},
+fv:{l:"期末希望保留（遺產／備用）",d:0,u:"NT$"}};
+var mode="pmt",V={};for(var k in F)V[k]=F[k].d;
+var $=function(i){return document.getElementById(i)};
+function money(x){return"NT$ "+Math.round(x).toLocaleString("zh-TW")}
+function short(x){var a=Math.abs(x);if(a>=1e8)return(x/1e8).toFixed(2)+" 億";if(a>=1e4)return Math.round(x/1e4).toLocaleString("zh-TW")+" 萬";return Math.round(x)+""}
+function sim(pv,pmt,r,n,t){var b=pv,c=pv,o=[{b:b,c:c}];for(var m=1;m<=n;m++){if(t){b+=pmt;b*=1+r}else{b*=1+r;b+=pmt}c+=pmt;if(m%12==0||m==n)o.push({b:b,c:c})}return o}
+function fvOf(pv,pmt,r,n,t){var g=Math.pow(1+r,n);return pv*g+(r==0?pmt*n:pmt*(g-1)/r*(1+r*t))}
+function pmtOf(fv,pv,r,n,t){var g=Math.pow(1+r,n);return r==0?(fv-pv)/n:(fv-pv*g)*r/((g-1)*(1+r*t))}
+function pvOf(pmt,fv,r,n,t){var g=Math.pow(1+r,n);return r==0?pmt*n+fv:pmt*(1-1/g)/r*(1+r*t)+fv/g}
+function tabs(){$("tabs").innerHTML=Object.keys(MODES).map(function(m){return'<button class="tab'+(m==mode?" on":"")+'" data-m="'+m+'"><b>'+MODES[m].n+'</b><span>'+MODES[m].s+'</span></button>'}).join("");
+[].forEach.call(document.querySelectorAll(".tab"),function(b){b.onclick=function(){mode=b.dataset.m;tabs();form();calc()}})}
+function form(){$("form").innerHTML=MODES[mode].f.map(function(k){return'<label for="f_'+k+'">'+F[k].l+'</label><div class="in"><input id="f_'+k+'" type="number" inputmode="decimal" step="any" min="0" value="'+V[k]+'"><i>'+F[k].u+'</i></div>'}).join("");
+MODES[mode].f.forEach(function(k){$("f_"+k).oninput=function(e){V[k]=parseFloat(e.target.value)||0;calc()}})}
+function kpi(a){return'<div class="kpis">'+a.map(function(x){return'<div class="kpi"><div>'+x[0]+'</div><b>'+x[1]+'</b></div>'}).join("")+'</div>'}
+function adv(t,c){return'<div class="adv '+(c||"")+'">'+t+'</div>'}
+function chart(d,target){
+var W=640,H=260,L=52,R=10,T=14,B=26,n=d.length-1;
+var mx=Math.max.apply(null,d.map(function(p){return Math.max(p.b,p.c)}).concat(target||0))*1.05||1;
+var x=function(i){return L+(W-L-R)*i/Math.max(n,1)},y=function(v){return T+(H-T-B)*(1-Math.max(v,0)/mx)};
+var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="資產成長圖">';
+for(var g=0;g<=4;g++){var v=mx*g/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--bd)"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" font-size="11" text-anchor="end" fill="var(--mu)">'+short(v)+'</text>'}
+var st=Math.max(1,Math.ceil(n/6));
+for(var i=0;i<=n;i+=st)s+='<text x="'+x(i)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="var(--mu)">第'+i+'年</text>';
+var P=function(k){return d.map(function(p,i){return(i?"L":"M")+x(i).toFixed(1)+" "+y(p[k]).toFixed(1)}).join("")};
+s+='<path d="'+P("c")+'" fill="none" stroke="#8a9a91" stroke-width="2" stroke-dasharray="5 4"/>';
+s+='<path d="'+P("b")+'L'+x(n)+' '+y(0)+'L'+x(0)+' '+y(0)+'Z" fill="var(--ac)" opacity=".12"/>';
+s+='<path d="'+P("b")+'" fill="none" stroke="var(--ac)" stroke-width="3"/>';
+if(target)s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(target)+'" y2="'+y(target)+'" stroke="#d9822b" stroke-width="2" stroke-dasharray="2 4"/>';
+$("chart").innerHTML=s+'</svg>'}
+function sens(rows,cols,fn,cur,title,note){
+var h='<h2>'+title+'</h2><table><tr><th>年報酬率＼年數</th>'+cols.map(function(c){return'<th>'+c+' 年</th>'}).join("")+'</tr>';
+rows.forEach(function(r,i){h+='<tr><td>'+r+'%</td>'+cols.map(function(c,j){return'<td'+(i==1&&j==1?' class="cur"':'')+'>'+short(fn(r,c))+'</td>'}).join("")+'</tr>'});
+$("sens").innerHTML=h+'</table><div class="fm" style="margin-top:8px">'+note+'</div>'}
+function calc(){
+var t=$("begin").checked?1:0,r=V.rate/100/12,y=Math.max(V.years,0),n=Math.round(y*12),inf=V.inf/100,res="",ad="",d,tg=null,sh=true;
+$("tl").style.display="";
+if(mode=="pmt"){
+if(n<1){$("res").innerHTML="<h2>結果</h2>請輸入大於 0 的年數";return}
+var nom=V.target*Math.pow(1+inf,y),p=pmtOf(nom,V.pv,r,n,t);
+if(p<0)p=0;
+d=sim(V.pv,p,r,n,t);tg=nom;
+var inv=p*n,gain=nom-V.pv-inv;
+res='<h2>結果</h2><div class="big"><small>為了達成目標，你每月需要投入</small>'+money(p)+'</div>'+
+kpi([["未來名目目標",short(nom)],["累計投入",short(inv+V.pv)],["預估投資收益",short(Math.max(gain,0))],["收益占目標",nom?Math.max(0,Math.round(gain/nom*100))+"%":"0%"]]);
+if(p==0)ad+=adv("你目前的本金在這個報酬率下，已足以達成目標，不需額外投入。");
+if(V.income>0&&p>0){var q=p/V.income*100;
+ad+=q<=20?adv("每月投入約占收入 "+q.toFixed(0)+"%，負擔在可持續範圍內，建議設定自動扣款。"):q<=40?adv("每月投入約占收入 "+q.toFixed(0)+"%，偏吃力。可考慮延長 3–5 年、或分階段提高投入金額。","w"):adv("每月投入約占收入 "+q.toFixed(0)+"%，不易長期維持。建議降低目標、延長年限，或先提升收入。","b")}
+if(inf>0)ad+=adv("通膨影響：今天的 "+short(V.target)+" 在 "+y+" 年後約需 "+short(nom)+" 才有相同購買力。");
+if(V.rate>8)ad+=adv("預期報酬率 "+V.rate+"% 偏樂觀，長期較穩健的假設多落在 3–6%。建議看看下方悲觀情境。","w");
+if(V.rate<=0)ad+=adv("報酬率為 0%，等同純存錢，所需投入會明顯增加。","w");
+sens([V.rate-2,V.rate,V.rate+2].map(function(a){return Math.max(a,0)}),[Math.max(y-5,1),y,y+5],function(a,c){return Math.max(0,pmtOf(V.target*Math.pow(1+inf,c),V.pv,a/1200,c*12,t))},0,"敏感度分析：每月所需投入","表格顯示在不同報酬率與年限下，每月需投入的金額（高亮格為你目前的設定）。報酬率少 2%，往往要多存不少，建議以保守情境規劃。")
+}else if(mode=="fv"){
+if(n<1){$("res").innerHTML="<h2>結果</h2>請輸入大於 0 的年數";return}
+var f=fvOf(V.pv,V.pmt,r,n,t),real=f/Math.pow(1+inf,y);d=sim(V.pv,V.pmt,r,n,t);
+var inv2=V.pv+V.pmt*n;$("tl").style.display="none";
+res='<h2>結果</h2><div class="big"><small>'+y+' 年後預估資產（名目）</small>'+money(f)+'</div>'+
+kpi([["相當於今日購買力",short(real)],["累計投入",short(inv2)],["投資收益",short(f-inv2)],["資產／本金",(f/Math.max(inv2,1)).toFixed(2)+" 倍"]]);
+if(inf>0)ad+=adv("扣除通膨後，實質價值約 "+short(real)+"，是名目金額的 "+Math.round(real/f*100)+"%。");
+if(f-inv2>inv2)ad+=adv("複利效果顯著：收益已超過你投入的本金，時間是最大的助力。");
+if(V.rate>8)ad+=adv("預期報酬率 "+V.rate+"% 偏樂觀，請同時參考下方保守情境。","w");
+sens([V.rate-2,V.rate,V.rate+2].map(function(a){return Math.max(a,0)}),[Math.max(y-5,1),y,y+5],function(a,c){return fvOf(V.pv,V.pmt,a/1200,c*12,t)},0,"敏感度分析：未來終值","表格顯示在不同報酬率與年限下的預估資產（高亮格為你目前的設定）。")
+}else if(mode=="n"){
+var tgt=V.target,b=V.pv,m=0,hit=false;d=[{b:b,c:b}];var c=b;
+while(m<1200){if(t){b+=V.pmt;b*=1+r}else{b*=1+r;b+=V.pmt}c+=V.pmt;m++;if(m%12==0)d.push({b:b,c:c});if(b>=tgt*Math.pow(1+inf,m/12)){hit=true;break}}
+if(m%12)d.push({b:b,c:c});$("sens").innerHTML="";
+if(!hit){$("res").innerHTML='<h2>結果</h2><div class="big"><small>以目前設定，100 年內都無法達成</small>—</div>'+adv("每月投入太少，連通膨都追不上。請提高每月投入或報酬率。","b");chart(d,null);return}
+var yy=Math.floor(m/12),mm=m%12,fut=tgt*Math.pow(1+inf,m/12);tg=fut;
+res='<h2>結果</h2><div class="big"><small>預計達成目標需要</small>'+yy+' 年 '+mm+' 個月</div>'+
+kpi([["達成時名目目標",short(fut)],["累計投入",short(c)],["投資收益",short(Math.max(b-c,0))]]);
+ad+=adv("想提早達標？每月多投入 10%（約 "+money(V.pmt*0.1)+"），通常能縮短明顯的時間；可調整左側數字立即比較。");
+if(V.pmt<=0)ad+=adv("每月投入為 0，只靠本金成長，請確認是否輸入正確。","w")
+}else{
+if(n<1){$("res").innerHTML="<h2>結果</h2>請輸入大於 0 的年數";return}
+var need=pvOf(V.wd,V.fv,r,n,t);d=sim(need,-V.wd,r,n,t);$("tl").style.display="none";$("sens").innerHTML="";
+res='<h2>結果</h2><div class="big"><small>退休時需要準備的本金</small>'+money(need)+'</div>'+
+kpi([["提領總額",short(V.wd*n)],["本金收益貢獻",short(Math.max(V.wd*n+V.fv-need,0))],["每月提領／本金",(V.wd*12/Math.max(need,1)*100).toFixed(1)+"% 年"]]);
+var wr=V.wd*12/Math.max(need,1)*100;
+ad+=wr>6?adv("年提領率約 "+wr.toFixed(1)+"%，偏高，資產可能提早耗盡。一般常以 4% 左右作為參考。","w"):adv("年提領率約 "+wr.toFixed(1)+"%，處於可參考的範圍。");
+ad+=adv("提示：此模式未計入通膨。若想維持購買力，可把每月提領金額上調，或改用實質報酬率（名目報酬率 − 通膨）試算。")
+}
+$("res").innerHTML=res+ad;chart(d,tg)}
+$("begin").onchange=calc;tabs();form();calc();
+</script>
+</body>
+</html>
